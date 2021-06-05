@@ -58,3 +58,57 @@ g.call(
 )
 .select('.domain')
 .remove();
+
+const EDUCATION_FILE = 'https://raw.githubusercontent.com/no-stack-dub-sack/testable-projects-fcc/master/src/data/choropleth_map/for_user_education.json';
+const COUNTY_FILE = 'https://raw.githubusercontent.com/no-stack-dub-sack/testable-projects-fcc/master/src/data/choropleth_map/counties.json';
+
+const ready = (error, us, education) => {
+  if (error) throw error;
+  
+  svg
+    .append('g')
+    .attr('class', 'counties')
+    .selectAll('path')
+    .data(topojson.feature(us, us.objects.counties).features)
+    .enter()
+    .append('path')
+    .attr('class', 'county')
+    .attr('data-fips', d => d.id)
+    .attr('data-education', d => {
+      const result = education.filter(obj =>obj.fips === d.id);
+      if (result[0]) return result[0].bachelorsOrHigher;
+      return 0;
+    })
+    .attr('fill', d => {
+      const result = education.filter(obj => obj.fips === d.id);
+      if (result[0]) return color(result[0].bachelorsOrHigher);
+      return color(0);
+    })
+    .attr('d', path)
+    .on('mouseover', d => {
+      tooltip.style('opacity', 0.9);
+      tooltip
+        .html(() => {
+          const result = education.filter(obj => obj.fips === d.id);
+          if (result[0]) return `
+          ${result[0]['area_name']}, ${result[0]['state']}: ${result[0].bachelorsOrHigher}%`;
+          
+          return 0;
+        })
+        .attr('data-education', () => {
+          const result = education.filter(obj => obj.fips === d.id);
+          if (result[0]) return result[0].bachelorsOrHigher;
+
+          return 0;
+        })
+        .style('left', d3.event.pageX + 10 + 'px')
+        .style('top', d3.event.pageY - 28 + 'px');
+    })
+    .on('mouseout',  () => tooltip.style('opacity', 0));
+
+  svg
+    .append('path')
+    .datum(topojson.mesh(us, us.objects.states, (a, b) => a !== b))
+    .attr('class', 'states')
+    .attr('d', path);
+}

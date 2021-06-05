@@ -112,3 +112,8 @@ const ready = (error, us, education) => {
     .attr('class', 'states')
     .attr('d', path);
 }
+
+d3.queue()
+  .defer(d3.json, COUNTY_FILE)
+  .defer(d3.json, EDUCATION_FILE)
+  .await(ready);
